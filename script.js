@@ -3,7 +3,12 @@ const SHIP_SIZE = 30; //px
 const SHIP_THRUST = 5;
 const TURN_SPEED = 270; 
 const FRICTION = 0.7;
+const ROIDS_NUM = 4; //starting numbers of roids
+const ROIDS_SPD = 50; //max staring spd of roids
+const ROIDS_SIZE = 100; //starting size of roids in px
+const ROIDS_VERT = 10; //avg num of vertices on each roid
 
+let roids = [];
 let canv = document.getElementById('gameCanvas')
 let ctx = canv.getContext('2d')
 
@@ -26,6 +31,7 @@ document.addEventListener("keyup", keyUp);
 
 //set up game loop
 setInterval(update, 1000 / FPS)
+createAsteroidBelt();
 
 function keyDown(/** @type {keyboardEvent} */ e) {
     switch(e.keyCode) {
@@ -55,6 +61,34 @@ function keyUp(/** @type {keyboardEvent} */ e) {
     }
 }
 
+function createAsteroidBelt() {
+    roids = [];
+    let x, y;
+    for(let i = 0; i < ROIDS_NUM; i++) {
+        do {
+            x = Math.floor(Math.random() * canv.width);
+            y = Math.floor(Math.random() * canv.height);
+        } while (distBetweenPoints(ship.x, ship.y, x, y) < ROIDS_SIZE * 2 + ship.r)
+        roids.push(newAsteroid(x, y));
+    }
+}
+
+function newAsteroid(x, y) {
+    let roid = {
+        x: x,
+        y: y,
+        xv: Math.random() * ROIDS_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
+        yv: Math.random() * ROIDS_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
+        r: ROIDS_SIZE / 2,
+        a: Math.random() * Math.PI * 2,
+        vert: Math.floor(Math.random() * (ROIDS_VERT + 1) + ROIDS_VERT / 2)
+    }
+    return roid
+}
+
+function distBetweenPoints(x1, y1, x2, y2) {
+    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+}
 
 function update() {
     //draw space
@@ -129,7 +163,37 @@ function update() {
         ship.y = 0 - ship.r
     }
 
-    //centre dot
-    // ctx.fillStyle = "red";
-    // ctx.fillRect(1, 1, 2, 2);
+    //draw roids
+    ctx.strokeStyle = "grey";
+    ctx.lineWidth = SHIP_SIZE / 20;
+    let x, y, r, a, vert;
+    for(let i = 0; i < roids.length; i++) {
+        //get roid properties
+        x = roids[i].x;
+        y = roids[i].y;
+        r = roids[i].r;
+        a = roids[i].a;
+        vert = roids[i].vert;
+        //draw path
+        ctx.beginPath();
+        ctx.moveTo(
+            x + r * Math.cos(a),
+            y + r * Math.sin(a)
+        )
+
+        //draw polygon
+        for (let j = 0; j < vert; j++) {
+            ctx.lineTo(
+                x + r * Math.cos(a + j * Math.PI * 2 / vert),
+                y + r * Math.sin(a + j * Math.PI * 2 / vert)
+            )
+        }
+        ctx.closePath();
+        ctx.stroke();
+
+        //move roids
+
+
+        //handle edge
+    }
 }
