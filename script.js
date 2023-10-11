@@ -2,7 +2,8 @@ const FPS = 60;
 const SHIP_SIZE = 30; //px
 const SHIP_THRUST = 5;
 const TURN_SPEED = 270; 
-const FRICTION = 0.7;
+const FRICTION = 0.6;
+const ROIDS_JAG = 0.6; //jaggedness of roids
 const ROIDS_NUM = 4; //starting numbers of roids
 const ROIDS_SPD = 50; //max staring spd of roids
 const ROIDS_SIZE = 100; //starting size of roids in px
@@ -81,8 +82,15 @@ function newAsteroid(x, y) {
         yv: Math.random() * ROIDS_SPD / FPS * (Math.random() < 0.5 ? 1 : -1),
         r: ROIDS_SIZE / 2,
         a: Math.random() * Math.PI * 2,
-        vert: Math.floor(Math.random() * (ROIDS_VERT + 1) + ROIDS_VERT / 2)
+        vert: Math.floor(Math.random() * (ROIDS_VERT + 1) + ROIDS_VERT / 2),
+        offs: [],
     }
+
+    //create offsets of vert
+    for (let i = 0; i < roid.vert; i++) {
+        roid.offs.push(Math.random() * ROIDS_JAG *  2 + 1 - ROIDS_JAG);
+    }
+
     return roid
 }
 
@@ -166,7 +174,7 @@ function update() {
     //draw roids
     ctx.strokeStyle = "grey";
     ctx.lineWidth = SHIP_SIZE / 20;
-    let x, y, r, a, vert;
+    let x, y, r, a, vert, offs;
     for(let i = 0; i < roids.length; i++) {
         //get roid properties
         x = roids[i].x;
@@ -174,26 +182,38 @@ function update() {
         r = roids[i].r;
         a = roids[i].a;
         vert = roids[i].vert;
+        offs = roids[i].offs;
         //draw path
         ctx.beginPath();
         ctx.moveTo(
-            x + r * Math.cos(a),
-            y + r * Math.sin(a)
+            x + r * offs[0] * Math.cos(a),
+            y + r * offs[0] * Math.sin(a)
         )
 
         //draw polygon
-        for (let j = 0; j < vert; j++) {
+        for (let j = 1; j < vert; j++) {
             ctx.lineTo(
-                x + r * Math.cos(a + j * Math.PI * 2 / vert),
-                y + r * Math.sin(a + j * Math.PI * 2 / vert)
+                x + r * offs[j] * Math.cos(a + j * Math.PI * 2 / vert),
+                y + r * offs[j] * Math.sin(a + j * Math.PI * 2 / vert)
             )
         }
         ctx.closePath();
         ctx.stroke();
 
         //move roids
-
+        roids[i].x += roids[i].xv;
+        roids[i].y += roids[i].yv;
 
         //handle edge
+        if(roids[i].x < 0 - roids[i].r) {
+            roids[i].x = canv.width + roids[i].r
+        } else if(roids[i].x > canv.width + roids[i].r) {
+            roids[i].x = 0 - roids[i].r
+        }
+        if(roids[i].y < 0 - roids[i].r) {
+            roids[i].y = canv.height + roids[i].r
+        } else if(roids[i].y > canv.height + roids[i].r) {
+            roids[i].y = 0 - roids[i].r
+        }
     }
 }
